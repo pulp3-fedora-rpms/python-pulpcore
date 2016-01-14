@@ -10,11 +10,13 @@
 
 Name: pulp
 Version: 2.8.0
-Release: %{upstream_beta_release}.1%{?dist}
+Release: %{upstream_beta_release}.2%{?dist}
 Summary: An application for managing software repositories
 License: GPLv2
 URL: https://github.com/pulp/pulp
 Source0: https://github.com/pulp/pulp/archive/pulp-%{version}-%{upstream_beta_release}.tar.gz
+# This patch is to deal with https://pulp.plan.io/issues/1496
+Patch0: 0001-Move-contents-of-srv-pulp-to-usr-share-pulp-srv.patch
 BuildArch: noarch
 BuildRequires: checkpolicy
 BuildRequires: hardlink
@@ -30,7 +32,9 @@ Pulp provides replication, access, and accounting for software repositories.
 
 
 %prep
-%autosetup -n %{name}-%{name}-%{version}-%{upstream_beta_release}
+%setup -q -n %{name}-%{name}-%{version}-%{upstream_beta_release}
+
+%patch0 -p1
 
 
 %build
@@ -74,7 +78,7 @@ install -d %{buildroot}%{_sysconfdir}/httpd/conf.d/
 install -d %{buildroot}%{_sysconfdir}/pki/%{name}/content
 install -d %{buildroot}%{_mandir}/man1
 install -d %{buildroot}%{_usr}/lib/%{name}/plugins/types
-install -d %{buildroot}/%{python2_sitelib}/pulp/server/srv/
+install -d %{buildroot}/%{_datadir}/pulp/wsgi/
 install -d %{buildroot}%{_var}/log/%{name}/
 
 # agent installation
@@ -177,13 +181,15 @@ install -pm644 server/etc/default/systemd_pulp_workers \
     %{buildroot}/%{_sysconfdir}/default/pulp_workers
 install -pm644 server/etc/httpd/conf.d/pulp_apache_24.conf \
     %{buildroot}/%{_sysconfdir}/httpd/conf.d/pulp.conf
+install -pm644 server/etc/httpd/conf.d/pulp_content.conf \
+    %{buildroot}/%{_sysconfdir}/httpd/conf.d/pulp_content.conf
 install -pm644 server/etc/pulp/* %{buildroot}/%{_sysconfdir}/%{name}
-install -pm644 server/srv/pulp/* %{buildroot}/%{python2_sitelib}/pulp/server/srv/
 install -pm644 server/usr/lib/systemd/system/* %{buildroot}/%{_usr}/lib/systemd/system/
 install -pm644 server/usr/lib/tmpfiles.d/* %{buildroot}/%{_usr}/lib/tmpfiles.d/
 install -pm755 server/selinux/server/enable.sh %{buildroot}%{_datadir}/pulp/selinux/server
 install -pm755 server/selinux/server/uninstall.sh %{buildroot}%{_datadir}/pulp/selinux/server
 install -pm755 server/selinux/server/relabel.sh %{buildroot}%{_datadir}/pulp/selinux/server
+install -pm644 server/usr/share/pulp/wsgi/* %{buildroot}/%{_datadir}/pulp/wsgi/
 
 # Web Content
 ln -s %{_sysconfdir}/pki/pulp/rsa_pub.key %{buildroot}/%{_var}/lib/pulp/static
@@ -200,7 +206,7 @@ install -d %{buildroot}/%{_sysconfdir}/default/
 install -d %{buildroot}/%{_sysconfdir}/httpd/conf.d/
 install -d %{buildroot}/%{_sysconfdir}/%{name}/
 install -d %{buildroot}/%{_usr}/lib/systemd/system/
-install -d %{buildroot}/%{python2_sitelib}/pulp/streamer/srv/
+install -d %{buildroot}/%{_datadir}/pulp/wsgi/
 install -d %{buildroot}/%{_var}/www/streamer/
 
 install -pm644 streamer/etc/default/systemd_pulp_streamer \
@@ -208,9 +214,9 @@ install -pm644 streamer/etc/default/systemd_pulp_streamer \
 install -pm644 streamer/etc/httpd/conf.d/pulp_streamer.conf \
     %{buildroot}/%{_sysconfdir}/httpd/conf.d/pulp_streamer.conf
 install -pm644 streamer/etc/pulp/streamer.conf %{buildroot}/%{_sysconfdir}/%{name}/streamer.conf
-install -pm644 streamer/srv/pulp/streamer_auth.wsgi \
-    %{buildroot}/%{python2_sitelib}/pulp/streamer/srv/
-install -pm644 streamer/srv/pulp/streamer.tac %{buildroot}/%{python2_sitelib}/pulp/streamer/srv/
+install -pm644 streamer/usr/share/pulp/wsgi/streamer_auth.wsgi \
+    %{buildroot}/%{_datadir}/pulp/wsgi/
+install -pm644 streamer/usr/share/pulp/wsgi/streamer.tac %{buildroot}/%{_datadir}/pulp/wsgi/
 install -pm644 streamer/usr/lib/systemd/system/* %{buildroot}/%{_usr}/lib/systemd/system/
 
 
@@ -547,6 +553,7 @@ Pulp provides replication, access, and accounting for software repositories.
 %config(noreplace) %{_sysconfdir}/default/pulp_resource_manager
 %config(noreplace) %{_sysconfdir}/default/pulp_workers
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}.conf
+%config(noreplace) %{_sysconfdir}/httpd/conf.d/pulp_content.conf
 %ghost %{_sysconfdir}/pki/%{name}/ca.crt
 %ghost %{_sysconfdir}/pki/%{name}/rsa_pub.key
 %dir %{_sysconfdir}/%{name}/content
@@ -563,6 +570,7 @@ Pulp provides replication, access, and accounting for software repositories.
 %{python2_sitelib}/%{name}/server/
 %{python2_sitelib}/%{name}/plugins/
 %{python2_sitelib}/pulp_server*.egg-info
+%dir %{_datadir}/pulp/wsgi
 
 %defattr(640,root,apache,-)
 %ghost %{_sysconfdir}/pki/%{name}/ca.key
@@ -802,6 +810,8 @@ The streamer component of the Pulp Lazy Sync feature.
 %{python2_sitelib}/%{name}/streamer/
 %{python2_sitelib}/pulp_streamer*.egg-info
 %{_usr}/lib/systemd/system/pulp_streamer.service
+%{_datadir}/pulp/wsgi/streamer_auth.wsgi
+%{_datadir}/pulp/wsgi/streamer.tac
 
 %defattr(-,apache,apache,-)
 %{_var}/www/streamer
@@ -819,5 +829,8 @@ fi
 
 
 %changelog
+* Wed Jan 13 2016 Randy Barlow <rbarlow@redhat.com> 2.8.0-0.1.beta.2
+- Patch for using different path than /srv for the WSGI apps.
+
 * Sun Jan 10 2016 Randy Barlow <rbarlow@redhat.com> 2.8.0-0.1.beta.1
 - Initial release.
