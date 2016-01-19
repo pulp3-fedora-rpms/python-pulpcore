@@ -6,24 +6,27 @@
 # Required gofer version
 %global gofer_version 2.5
 
-%global upstream_beta_release 0.1.beta
+%global upstream_beta_release 0.2.beta
 
 Name: pulp
 Version: 2.8.0
-Release: %{upstream_beta_release}.2%{?dist}
+Release: %{upstream_beta_release}.1%{?dist}
 Summary: An application for managing software repositories
 License: GPLv2
 URL: https://github.com/pulp/pulp
 Source0: https://github.com/pulp/pulp/archive/pulp-%{version}-%{upstream_beta_release}.tar.gz
 # This patch is to deal with https://pulp.plan.io/issues/1496
 Patch0: 0001-Move-contents-of-srv-pulp-to-usr-share-pulp-srv.patch
+# This patch is for https://pulp.plan.io/issues/1528
+Patch1: 0002-Update-Pulp-to-work-with-the-pymongo-3.0.0-API.patch
 BuildArch: noarch
 BuildRequires: checkpolicy
 BuildRequires: hardlink
+BuildRequires: plantuml
 BuildRequires: python2-devel
 BuildRequires: python2-setuptools
+BuildRequires: python2-rpm-macros
 BuildRequires: python2-sphinx >= 1.0.8
-BuildRequires: rpm-python
 BuildRequires: selinux-policy-devel
 
 
@@ -35,6 +38,7 @@ Pulp provides replication, access, and accounting for software repositories.
 %setup -q -n %{name}-%{name}-%{version}-%{upstream_beta_release}
 
 %patch0 -p1
+%patch1 -p1
 
 
 %build
@@ -829,6 +833,11 @@ fi
 
 
 %changelog
+* Tue Jan 19 2016 Randy Barlow <rbarlow@redhat.com> 2.8.0-0.2.beta.1
+- Update to the second Pulp beta.
+- BuildRequires the new python2-rpm-macros instead of rpm-python.
+- Patch for working with pymongo >= 3.0.0 (#1298427).
+
 * Wed Jan 13 2016 Randy Barlow <rbarlow@redhat.com> 2.8.0-0.1.beta.2
 - Patch for using different path than /srv for the WSGI apps.
 
