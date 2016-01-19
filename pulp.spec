@@ -6,7 +6,7 @@
 # Required gofer version
 %global gofer_version 2.5
 
-%global upstream_beta_release 0.2.beta
+%global upstream_beta_release 0.3.beta
 
 Name: pulp
 Version: 2.8.0
@@ -247,6 +247,7 @@ synchronization, and to kick off remote actions on consumers.
 %dir %{_sysconfdir}/%{name}/admin/conf.d
 %{_bindir}/%{name}-admin
 %dir %{_usr}/lib/%{name}/admin
+%dir %{_usr}/lib/%{name}/admin/extensions
 %{python2_sitelib}/%{name}/client/admin/
 %{python2_sitelib}/pulp_client_admin*.egg-info
 
@@ -526,7 +527,7 @@ Requires: mod_xsendfile >= 0.12
 Requires: nss-tools
 Requires: openssl
 Requires: python-blinker
-Requires: python-celery >= 3.1.0
+Requires: python-celery >= 3.1.11
 Requires: python-celery < 3.2.0
 Requires: python-django >= 1.4.0
 Requires: python-gofer >= %{gofer_version}
@@ -833,6 +834,11 @@ fi
 
 
 %changelog
+* Tue Jan 19 2016 Randy Barlow <rbarlow@redhat.com> 2.8.0-0.3.beta.1
+- Update to the third 2.8.0 beta.
+- Require python-celery >= 3.1.11.
+- Make admin-client own /usr/lib/pulp/admin/extensions.
+
 * Tue Jan 19 2016 Randy Barlow <rbarlow@redhat.com> 2.8.0-0.2.beta.1
 - Update to the second Pulp beta.
 - BuildRequires the new python2-rpm-macros instead of rpm-python.
