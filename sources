@@ -1,3 +1,1 @@
-67175860cff2a5e4cffcb04250554244  0001-Move-contents-of-srv-pulp-to-usr-share-pulp-srv.patch
-166b02865c26be43a7ad4122d6bcea9e  0002-Update-Pulp-to-work-with-the-pymongo-3.0.0-API.patch
-f9709e22d2999259eb251bf1760aeec5  pulp-2.8.0-0.3.beta.tar.gz
+5a966c0864599bad6d067609791e74c5  pulp-2.8.0-0.4.beta.tar.gz

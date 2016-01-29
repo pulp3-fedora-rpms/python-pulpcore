@@ -6,7 +6,7 @@
 # Required gofer version
 %global gofer_version 2.5
 
-%global upstream_beta_release 0.3.beta
+%global upstream_beta_release 0.4.beta
 
 Name: pulp
 Version: 2.8.0
@@ -15,10 +15,6 @@ Summary: An application for managing software repositories
 License: GPLv2
 URL: https://github.com/pulp/pulp
 Source0: https://github.com/pulp/pulp/archive/pulp-%{version}-%{upstream_beta_release}.tar.gz
-# This patch is to deal with https://pulp.plan.io/issues/1496
-Patch0: 0001-Move-contents-of-srv-pulp-to-usr-share-pulp-srv.patch
-# This patch is for https://pulp.plan.io/issues/1528
-Patch1: 0002-Update-Pulp-to-work-with-the-pymongo-3.0.0-API.patch
 BuildArch: noarch
 BuildRequires: checkpolicy
 BuildRequires: hardlink
@@ -35,10 +31,7 @@ Pulp provides replication, access, and accounting for software repositories.
 
 
 %prep
-%setup -q -n %{name}-%{name}-%{version}-%{upstream_beta_release}
-
-%patch0 -p1
-%patch1 -p1
+%autosetup -n %{name}-%{name}-%{version}-%{upstream_beta_release}
 
 
 %build
@@ -539,8 +532,9 @@ Requires: python-qpid
 Requires: python-semantic_version >= 2.2.0
 Requires: python2-%{name}-common = %{version}
 Requires: python2-%{name}-repoauth = %{version}
-Requires: python2-mongoengine >= 0.9.0
+Requires: python2-mongoengine >= 0.10.0
 Requires: python2-oauth2 >= 1.5.211
+Requires: python2-pymongo >= 3.0.0
 Requires: python2-setuptools
 Requires(post): systemd
 Requires(preun): systemd
@@ -834,6 +828,11 @@ fi
 
 
 %changelog
+* Fri Jan 29 2016 Randy Barlow <rbarlow@redhat.com> 2.8.0-0.4.beta.1
+- Update to 2.8.0 beta 4.
+- Explicitly depend on pymongo so we can guarantee compatible version.
+- Add minimum version to mongoengine.
+
 * Tue Jan 19 2016 Randy Barlow <rbarlow@redhat.com> 2.8.0-0.3.beta.1
 - Update to the third 2.8.0 beta.
 - Require python-celery >= 3.1.11.
