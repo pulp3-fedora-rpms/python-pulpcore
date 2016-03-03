@@ -6,7 +6,7 @@
 # Required gofer version
 %global gofer_version 2.5
 
-%global upstream_beta_release 0.6.beta
+%global upstream_beta_release 0.7.beta
 
 Name: pulp
 Version: 2.8.0
@@ -529,6 +529,7 @@ Requires: mod_wsgi >= 3.4-1.pulp
 Requires: mod_xsendfile >= 0.12
 Requires: nss-tools
 Requires: openssl
+Requires: pulp-selinux
 Requires: python-blinker
 Requires: python-celery >= 3.1.11
 Requires: python-celery < 3.2.0
@@ -581,7 +582,9 @@ Pulp provides replication, access, and accounting for software repositories.
 %{python2_sitelib}/pulp_server*.egg-info
 %{_datadir}/pulp/templates
 %dir %{_datadir}/pulp/wsgi
-%{_datadir}/pulp/wsgi
+%{_datadir}/pulp/wsgi/content.wsgi
+%{_datadir}/pulp/wsgi/repo_auth.wsgi
+%{_datadir}/pulp/wsgi/webservices.wsgi
 
 %defattr(640,root,apache,-)
 %ghost %{_sysconfdir}/pki/%{name}/ca.key
@@ -845,6 +848,10 @@ fi
 
 
 %changelog
+* Thu Mar 03 2016 Randy Barlow <rbarlow@redhat.com> - 2.8.0-0.7.beta.1
+- Update to upstream 2.8.0-0.7.beta.
+- pulp-server depends on pulp-selinux (#1311747).
+
 * Thu Mar 03 2016 Randy Barlow <rbarlow@redhat.com> - 2.8.0-0.6.beta.1
 - Update to upstream 2.8.0-0.6.beta.
 
