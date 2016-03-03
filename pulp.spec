@@ -6,16 +6,18 @@
 # Required gofer version
 %global gofer_version 2.5
 
-%global upstream_beta_release 0.4.beta
+%global upstream_beta_release 0.6.beta
 
 Name: pulp
 Version: 2.8.0
-Release: %{upstream_beta_release}.1%{?dist}.1
+Release: %{upstream_beta_release}.1%{?dist}
+BuildArch: noarch
+
 Summary: An application for managing software repositories
 License: GPLv2
 URL: https://github.com/pulp/pulp
 Source0: https://github.com/pulp/pulp/archive/pulp-%{version}-%{upstream_beta_release}.tar.gz
-BuildArch: noarch
+
 BuildRequires: checkpolicy
 BuildRequires: hardlink
 BuildRequires: plantuml
@@ -24,6 +26,7 @@ BuildRequires: python2-setuptools
 BuildRequires: python2-rpm-macros
 BuildRequires: python2-sphinx >= 1.0.8
 BuildRequires: selinux-policy-devel
+BuildRequires: systemd
 
 
 %description
@@ -50,6 +53,8 @@ sed -i "s/policy_module(pulp-server, [0-9]*.[0-9]*.[0-9]*)/policy_module(pulp-se
     pulp-server.te
 sed -i "s/policy_module(pulp-celery, [0-9]*.[0-9]*.[0-9]*)/policy_module(pulp-celery, %{version})/"\
     pulp-celery.te
+sed -i "s/policy_module(pulp-streamer, [0-9]*.[0-9]*.[0-9]*)/policy_module(pulp-streamer, %{version})/"\
+    pulp-streamer.te
 ./build.sh ${distver}
 cd -
 
@@ -75,6 +80,7 @@ install -d %{buildroot}%{_sysconfdir}/httpd/conf.d/
 install -d %{buildroot}%{_sysconfdir}/pki/%{name}/content
 install -d %{buildroot}%{_mandir}/man1
 install -d %{buildroot}%{_usr}/lib/%{name}/plugins/types
+install -d %{buildroot}%{_unitdir}
 install -d %{buildroot}/%{_datadir}/pulp/wsgi/
 install -d %{buildroot}%{_var}/log/%{name}/
 
@@ -142,16 +148,19 @@ install -pm644 nodes/parent/etc/pulp/server/plugins.conf.d/nodes/distributor/htt
     %{buildroot}%{_sysconfdir}/pulp/server/plugins.conf.d/nodes/distributor/
 
 # WWW
+install -d %{buildroot}/%{_datadir}/pulp/templates/
+
 ln -s %{_sharedstatedir}/pulp/content %{buildroot}/%{_var}/www/pulp/nodes
 ln -s %{_sharedstatedir}/pulp/nodes/published/http %{buildroot}/%{_var}/www/pulp/nodes
 ln -s %{_sharedstatedir}/pulp/nodes/published/https %{buildroot}/%{_var}/www/pulp/nodes
+
+install -pm644 server/usr/share/pulp/templates/* %{buildroot}/%{_datadir}/pulp/templates/
 
 # pulp-server installation
 install -d %{buildroot}%{_sysconfdir}/%{name}/content/sources/conf.d
 install -d %{buildroot}%{_sysconfdir}/%{name}/server/plugins.conf.d
 install -d %{buildroot}%{_sysconfdir}/%{name}/vhosts80
 install -d %{buildroot}%{_sysconfdir}/default/
-install -d %{buildroot}%{_usr}/lib/systemd/system/
 install -d %{buildroot}%{_usr}/lib/tmpfiles.d/
 install -d %{buildroot}%{_datadir}/pulp/selinux/server
 install -d %{buildroot}%{_var}/cache/%{name}
@@ -159,6 +168,7 @@ install -d %{buildroot}%{_sharedstatedir}/rpm-state/pulp/old-version
 install -d %{buildroot}%{_sharedstatedir}/%{name}/content
 install -d %{buildroot}%{_sharedstatedir}/%{name}/published
 install -d %{buildroot}%{_sharedstatedir}/%{name}/static
+install -d %{buildroot}%{_sharedstatedir}/%{name}/templates
 install -d %{buildroot}%{_sharedstatedir}/%{name}/uploads
 install -d %{buildroot}%{_var}/www
 
@@ -181,7 +191,7 @@ install -pm644 server/etc/httpd/conf.d/pulp_apache_24.conf \
 install -pm644 server/etc/httpd/conf.d/pulp_content.conf \
     %{buildroot}/%{_sysconfdir}/httpd/conf.d/pulp_content.conf
 install -pm644 server/etc/pulp/* %{buildroot}/%{_sysconfdir}/%{name}
-install -pm644 server/usr/lib/systemd/system/* %{buildroot}/%{_usr}/lib/systemd/system/
+install -pm644 server/%{_unitdir}/* %{buildroot}/%{_unitdir}
 install -pm644 server/usr/lib/tmpfiles.d/* %{buildroot}/%{_usr}/lib/tmpfiles.d/
 install -pm755 server/selinux/server/enable.sh %{buildroot}%{_datadir}/pulp/selinux/server
 install -pm755 server/selinux/server/uninstall.sh %{buildroot}%{_datadir}/pulp/selinux/server
@@ -202,7 +212,6 @@ touch %{buildroot}/%{_sysconfdir}/pki/%{name}/rsa_pub.key
 install -d %{buildroot}/%{_sysconfdir}/default/
 install -d %{buildroot}/%{_sysconfdir}/httpd/conf.d/
 install -d %{buildroot}/%{_sysconfdir}/%{name}/
-install -d %{buildroot}/%{_usr}/lib/systemd/system/
 install -d %{buildroot}/%{_datadir}/pulp/wsgi/
 install -d %{buildroot}/%{_var}/www/streamer/
 
@@ -214,7 +223,7 @@ install -pm644 streamer/etc/pulp/streamer.conf %{buildroot}/%{_sysconfdir}/%{nam
 install -pm644 streamer/usr/share/pulp/wsgi/streamer_auth.wsgi \
     %{buildroot}/%{_datadir}/pulp/wsgi/
 install -pm644 streamer/usr/share/pulp/wsgi/streamer.tac %{buildroot}/%{_datadir}/pulp/wsgi/
-install -pm644 streamer/usr/lib/systemd/system/* %{buildroot}/%{_usr}/lib/systemd/system/
+install -pm644 streamer/%{_unitdir}/* %{buildroot}/%{_unitdir}
 
 
 # ---- Admin Client (CLI) ------------------------------------------------------
@@ -351,7 +360,6 @@ Pulp nodes admin client extensions.
 Summary: Pulp child nodes support
 Requires: %{name}-nodes-common = %{version}
 Requires: pulp-server = %{version}
-Requires: python-nectar >= 1.1.2
 Requires: python2-pulp-agent-lib = %{version}
 
 
@@ -451,6 +459,7 @@ Pulp parent nodes support.
 %package        selinux
 Summary:        Pulp SELinux policy for pulp components
 
+Requires: python2-%{name}-common = %{version}
 Requires: selinux-policy >= 3
 Requires: selinux-policy-targeted
 Requires(post): /usr/sbin/semodule, /sbin/fixfiles, /usr/sbin/semanage
@@ -498,9 +507,10 @@ exit 0
 %files selinux
 %license LICENSE
 %doc README COPYRIGHT
-%{_datadir}/pulp
+%{_datadir}/pulp/selinux
 %{_datadir}/selinux/*/pulp-celery.pp
 %{_datadir}/selinux/*/pulp-server.pp
+%{_datadir}/selinux/*/pulp-streamer.pp
 %ghost %{_localstatedir}/lib/rpm-state/%{name}
 
 
@@ -527,7 +537,7 @@ Requires: python-gofer >= %{gofer_version}
 Requires: python-httplib2
 Requires: python-isodate >= 0.5.0-1
 Requires: python-ldap
-Requires: python-nectar >= 1.1.6
+Requires: python-nectar >= 1.5.0
 Requires: python-qpid
 Requires: python-semantic_version >= 2.2.0
 Requires: python2-%{name}-common = %{version}
@@ -564,12 +574,14 @@ Pulp provides replication, access, and accounting for software repositories.
 %{_bindir}/pulp-gen-ca-certificate
 %dir %{_usr}/lib/%{name}/plugins
 %dir %{_usr}/lib/%{name}/plugins/types
-%{_usr}/lib/systemd/system/*
+%{_unitdir}/*
 %{_usr}/lib/tmpfiles.d/*
 %{python2_sitelib}/%{name}/server/
 %{python2_sitelib}/%{name}/plugins/
 %{python2_sitelib}/pulp_server*.egg-info
+%{_datadir}/pulp/templates
 %dir %{_datadir}/pulp/wsgi
+%{_datadir}/pulp/wsgi
 
 %defattr(640,root,apache,-)
 %ghost %{_sysconfdir}/pki/%{name}/ca.key
@@ -616,14 +628,17 @@ then
   pulp-gen-ca-certificate
 fi
 
+%systemd_post pulp_workers.service
+%systemd_post pulp_celerybeat.service
+%systemd_post pulp_resource_manager.service
+%systemd_post pulp_streamer.service
+
 
 %preun server
-# If we are uninstalling
-if [ $1 -eq 0 ] ; then
-        /bin/systemctl stop pulp_workers > /dev/null 2>&1
-        /bin/systemctl stop pulp_celerybeat > /dev/null 2>&1
-        /bin/systemctl stop pulp_resource_manager > /dev/null 2>&1
-fi
+%systemd_preun pulp_workers.service
+%systemd_preun pulp_celerybeat.service
+%systemd_preun pulp_resource_manager.service
+%systemd_preun pulp_streamer.service
 
 
 %postun server
@@ -722,6 +737,7 @@ A collection of components that are common between the pulp server and client.
 %{python2_sitelib}/%{name}/__init__.*
 %{python2_sitelib}/%{name}/common/
 %{python2_sitelib}/pulp_common*.egg-info
+%dir %{_datadir}/pulp
 
 
 # ---- Devel ------------------------------------------------------------------
@@ -782,14 +798,14 @@ Cert-based repository authentication for Pulp
 %config(noreplace) %{_sysconfdir}/pulp/repo_auth.conf
 %{python2_sitelib}/%{name}/repoauth/
 %{python2_sitelib}/pulp_repoauth*.egg-info
+%{_datadir}/%{name}/wsgi/repo_auth.wsgi
 
 
 # ---- Lazy Streamer ---------------------------------------------------------------
 %package -n python2-pulp-streamer
 Summary: The pulp lazy streamer
 Requires: httpd
-Requires: pulp-server
-Requires: python-nectar >= 1.4.0
+Requires: pulp-server >= %{version}
 Requires: python-twisted
 Requires: python2-mongoengine
 Requires(preun): systemd
@@ -806,6 +822,7 @@ The streamer component of the Pulp Lazy Sync feature.
 %config(noreplace) %{_sysconfdir}/default/pulp_streamer
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/pulp_streamer.conf
 %config(noreplace) %{_sysconfdir}/%{name}/streamer.conf
+%{_bindir}/pulp_streamer
 %{python2_sitelib}/%{name}/streamer/
 %{python2_sitelib}/pulp_streamer*.egg-info
 %{_usr}/lib/systemd/system/pulp_streamer.service
@@ -828,6 +845,9 @@ fi
 
 
 %changelog
+* Thu Mar 03 2016 Randy Barlow <rbarlow@redhat.com> - 2.8.0-0.6.beta.1
+- Update to upstream 2.8.0-0.6.beta.
+
 * Thu Feb 04 2016 Fedora Release Engineering <releng@fedoraproject.org> - 2.8.0-0.4.beta.1.1
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
 
