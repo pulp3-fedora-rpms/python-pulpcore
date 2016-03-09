@@ -6,7 +6,7 @@
 # Required gofer version
 %global gofer_version 2.5
 
-%global upstream_beta_release 0.7.beta
+%global upstream_beta_release 0.9.rc
 
 Name: pulp
 Version: 2.8.0
