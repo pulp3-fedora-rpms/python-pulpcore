@@ -10,7 +10,7 @@
 
 Name: pulp
 Version: 2.8.0
-Release: %{upstream_beta_release}.1%{?dist}
+Release: %{upstream_beta_release}.2%{?dist}
 BuildArch: noarch
 
 Summary: An application for managing software repositories
@@ -848,6 +848,9 @@ fi
 
 
 %changelog
+* Wed Mar 09 2016 Randy Barlow <rbarlow@redhat.com> - 2.8.0-0.9.rc.2
+- Update to upstream 2.8.0-0.9.rc.
+
 * Thu Mar 03 2016 Randy Barlow <rbarlow@redhat.com> - 2.8.0-0.7.beta.1
 - Update to upstream 2.8.0-0.7.beta.
 - pulp-server depends on pulp-selinux (#1311747).
