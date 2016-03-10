@@ -10,7 +10,7 @@
 
 Name: pulp
 Version: 2.8.0
-Release: %{upstream_beta_release}.2%{?dist}
+Release: %{upstream_beta_release}.3%{?dist}
 BuildArch: noarch
 
 Summary: An application for managing software repositories
@@ -164,6 +164,7 @@ install -d %{buildroot}%{_sysconfdir}/default/
 install -d %{buildroot}%{_usr}/lib/tmpfiles.d/
 install -d %{buildroot}%{_datadir}/pulp/selinux/server
 install -d %{buildroot}%{_var}/cache/%{name}
+install -d %{buildroot}%{_var}/run/%{name}
 install -d %{buildroot}%{_sharedstatedir}/rpm-state/pulp/old-version
 install -d %{buildroot}%{_sharedstatedir}/%{name}/content
 install -d %{buildroot}%{_sharedstatedir}/%{name}/published
@@ -566,7 +567,7 @@ Pulp provides replication, access, and accounting for software repositories.
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/pulp_content.conf
 %ghost %{_sysconfdir}/pki/%{name}/ca.crt
 %ghost %{_sysconfdir}/pki/%{name}/rsa_pub.key
-%dir %{_sysconfdir}/%{name}/content
+%{_sysconfdir}/%{name}/content
 %dir %{_sysconfdir}/%{name}/server
 %dir %{_sysconfdir}/%{name}/server/plugins.conf.d
 %dir %{_sysconfdir}/%{name}/vhosts80
@@ -593,6 +594,7 @@ Pulp provides replication, access, and accounting for software repositories.
 
 %defattr(-,apache,apache,-)
 %{_var}/cache/%{name}/
+%dir %{_var}/run/pulp
 %dir %{_var}/lib/%{name}
 %{_var}/lib/%{name}/content
 %{_var}/lib/%{name}/published
@@ -848,6 +850,10 @@ fi
 
 
 %changelog
+* Wed Mar 09 2016 Randy Barlow <rbarlow@redhat.com> - 2.8.0-0.9.rc.3
+- Add /var/run/pulp to pulp-server.
+- Package the full contents of /etc/pulp/content, not just the dir.
+
 * Wed Mar 09 2016 Randy Barlow <rbarlow@redhat.com> - 2.8.0-0.9.rc.2
 - Update to upstream 2.8.0-0.9.rc.
 
