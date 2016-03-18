@@ -6,17 +6,18 @@
 # Required gofer version
 %global gofer_version 2.5
 
-%global upstream_beta_release 0.9.rc
 
 Name: pulp
 Version: 2.8.0
-Release: %{upstream_beta_release}.3%{?dist}
+Release: 1%{?dist}
 BuildArch: noarch
 
 Summary: An application for managing software repositories
 License: GPLv2
 URL: https://github.com/pulp/pulp
-Source0: https://github.com/pulp/pulp/archive/pulp-%{version}-%{upstream_beta_release}.tar.gz
+Source0: https://github.com/pulp/pulp/archive/pulp-%{version}-1.tar.gz
+Patch0:  0001-Allow-the-Celery-process-to-resolve-domain-names.patch
+Patch1:  0002-All-Pulp-services-should-wait-until-the-network-is-o.patch
 
 BuildRequires: checkpolicy
 BuildRequires: hardlink
@@ -34,7 +35,10 @@ Pulp provides replication, access, and accounting for software repositories.
 
 
 %prep
-%autosetup -n %{name}-%{name}-%{version}-%{upstream_beta_release}
+%setup -q -n %{name}-%{name}-%{version}-1
+
+%patch0 -p1
+%patch1 -p1
 
 
 %build
@@ -850,6 +854,11 @@ fi
 
 
 %changelog
+* Wed Mar 16 2016 Randy Barlow <rbarlow@redhat.com> - 2.8.0-1
+- Update to the 2.8.0 release.
+- Add a temporary SELinux policy patch that allows DNS resolution and calls to setrlimit().
+- Add a patch that ensures that the workers start after the network is online.
+
 * Wed Mar 09 2016 Randy Barlow <rbarlow@redhat.com> - 2.8.0-0.9.rc.3
 - Add /var/run/pulp to pulp-server.
 - Package the full contents of /etc/pulp/content, not just the dir.

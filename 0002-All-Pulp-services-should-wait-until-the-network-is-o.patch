@@ -1,0 +1,77 @@
+From 30cf59ced4a6dcac769d4d9bf1935b797fd373aa Mon Sep 17 00:00:00 2001
+From: Randy Barlow <randy@electronsweatshop.com>
+Date: Thu, 17 Mar 2016 15:14:02 -0400
+Subject: [PATCH] All Pulp services should wait until the network is online to
+ start.
+
+On Fedora 24, the /etc/resolv.conf symlink is not set up when the
+network.target starts. This causes a race condition during boot,
+and our Celery workers often read the /etc/resolv.conf symlink
+before it points at its final destination. This causes our workers
+to be unable to resolve domain names.
+
+This commit adjusts our unit files so they wait for the
+network-online.target which occurs once the network is ready to
+use.
+---
+ server/usr/lib/systemd/system/pulp_celerybeat.service       | 3 ++-
+ server/usr/lib/systemd/system/pulp_resource_manager.service | 3 ++-
+ server/usr/lib/systemd/system/pulp_workers.service          | 3 ++-
+ streamer/usr/lib/systemd/system/pulp_streamer.service       | 3 ++-
+ 4 files changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/server/usr/lib/systemd/system/pulp_celerybeat.service b/server/usr/lib/systemd/system/pulp_celerybeat.service
+index 6f8fd68..e0317f3 100644
+--- a/server/usr/lib/systemd/system/pulp_celerybeat.service
++++ b/server/usr/lib/systemd/system/pulp_celerybeat.service
+@@ -1,6 +1,7 @@
+ [Unit]
+ Description=Pulp's Celerybeat
+-After=network.target
++After=network-online.target
++Wants=network-online.target
+ 
+ [Service]
+ EnvironmentFile=/etc/default/pulp_celerybeat
+diff --git a/server/usr/lib/systemd/system/pulp_resource_manager.service b/server/usr/lib/systemd/system/pulp_resource_manager.service
+index 187a5fc..ce5c130 100644
+--- a/server/usr/lib/systemd/system/pulp_resource_manager.service
++++ b/server/usr/lib/systemd/system/pulp_resource_manager.service
+@@ -1,6 +1,7 @@
+ [Unit]
+ Description=Pulp Resource Manager
+-After=network.target
++After=network-online.target
++Wants=network-online.target
+ 
+ [Service]
+ EnvironmentFile=/etc/default/pulp_resource_manager
+diff --git a/server/usr/lib/systemd/system/pulp_workers.service b/server/usr/lib/systemd/system/pulp_workers.service
+index af4c46e..1e43268 100644
+--- a/server/usr/lib/systemd/system/pulp_workers.service
++++ b/server/usr/lib/systemd/system/pulp_workers.service
+@@ -1,6 +1,7 @@
+ [Unit]
+ Description=Pulp Celery Workers
+-After=network.target
++After=network-online.target
++Wants=network-online.target
+ 
+ [Service]
+ Type=oneshot
+diff --git a/streamer/usr/lib/systemd/system/pulp_streamer.service b/streamer/usr/lib/systemd/system/pulp_streamer.service
+index 661b81e..9b4da5c 100644
+--- a/streamer/usr/lib/systemd/system/pulp_streamer.service
++++ b/streamer/usr/lib/systemd/system/pulp_streamer.service
+@@ -1,6 +1,7 @@
+ [Unit]
+ Description=The Pulp lazy content loading streamer
+-After=network.target
++After=network-online.target
++Wants=network-online.target
+ 
+ [Service]
+ User=apache
+-- 
+2.7.2
+
