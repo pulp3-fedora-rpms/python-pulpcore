@@ -8,7 +8,7 @@
 
 
 Name: pulp
-Version: 2.8.0
+Version: 2.8.2
 Release: 1%{?dist}
 BuildArch: noarch
 
@@ -16,8 +16,6 @@ Summary: An application for managing software repositories
 License: GPLv2
 URL: https://github.com/pulp/pulp
 Source0: https://github.com/pulp/pulp/archive/pulp-%{version}-1.tar.gz
-Patch0:  0001-Allow-the-Celery-process-to-resolve-domain-names.patch
-Patch1:  0002-All-Pulp-services-should-wait-until-the-network-is-o.patch
 
 BuildRequires: checkpolicy
 BuildRequires: hardlink
@@ -35,10 +33,7 @@ Pulp provides replication, access, and accounting for software repositories.
 
 
 %prep
-%setup -q -n %{name}-%{name}-%{version}-1
-
-%patch0 -p1
-%patch1 -p1
+%autosetup -n %{name}-%{name}-%{version}-1
 
 
 %build
