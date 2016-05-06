@@ -849,6 +849,9 @@ fi
 
 
 %changelog
+* Wed Apr 6 2016 Randy Barlow <randy@electronsweatshop.com> - 2.8.2-1
+- Update to Pulp 2.8.2 for CVE-2016-3095.
+
 * Wed Mar 16 2016 Randy Barlow <rbarlow@redhat.com> - 2.8.0-1
 - Update to the 2.8.0 release.
 - Add a temporary SELinux policy patch that allows DNS resolution and calls to setrlimit().
