@@ -9,7 +9,7 @@
 
 Name: pulp
 Version: 2.8.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 BuildArch: noarch
 
 Summary: An application for managing software repositories
@@ -210,7 +210,6 @@ touch %{buildroot}/%{_sysconfdir}/pki/%{name}/rsa_pub.key
 
 # pulp-streamer installation
 install -d %{buildroot}/%{_sysconfdir}/default/
-install -d %{buildroot}/%{_sysconfdir}/httpd/conf.d/
 install -d %{buildroot}/%{_sysconfdir}/%{name}/
 install -d %{buildroot}/%{_datadir}/pulp/wsgi/
 install -d %{buildroot}/%{_var}/www/streamer/
@@ -312,6 +311,7 @@ A tool used to administer a pulp consumer.
 %defattr(640,root,root,-)
 %ghost %{_sysconfdir}/pki/%{name}/consumer/rsa.key
 
+
 %post consumer-client
 # RSA key pair
 KEY_DIR="%{_sysconfdir}/pki/%{name}/consumer/"
@@ -319,9 +319,14 @@ KEY_PATH="$KEY_DIR/rsa.key"
 KEY_PATH_PUB="$KEY_DIR/rsa_pub.key"
 if [ ! -f $KEY_PATH ]
 then
+  # Ensure the key generated is only readable by the owner.
+  OLD_UMASK=$(umask)
+  umask 077
   openssl genrsa -out $KEY_PATH 2048 &> /dev/null
   openssl rsa -in $KEY_PATH -pubout > $KEY_PATH_PUB 2> /dev/null
+  umask $OLD_UMASK
 fi
+chmod 640 $KEY_PATH
 
 
 # Documentation
@@ -622,9 +627,18 @@ KEY_PATH="$KEY_DIR/rsa.key"
 KEY_PATH_PUB="$KEY_DIR/rsa_pub.key"
 if [ ! -f $KEY_PATH ]
 then
+  # Ensure the key generated is only readable by the owner.
+  OLD_UMASK=$(umask)
+  umask 077
   openssl genrsa -out $KEY_PATH 2048 &> /dev/null
   openssl rsa -in $KEY_PATH -pubout > $KEY_PATH_PUB 2> /dev/null
+  umask $OLD_UMASK
 fi
+chmod 640 $KEY_PATH
+chmod 644 $KEY_PATH_PUB
+chown root:apache $KEY_PATH
+chown root:apache $KEY_PATH_PUB
+ln -fs $KEY_PATH_PUB %{_var}/lib/%{name}/static
 
 # CA certificate
 if [ $1 -eq 1 ]; # not an upgrade
@@ -849,6 +863,10 @@ fi
 
 
 %changelog
+* Fri May 13 2016 Randy Barlow <rbarlow@redhat.com> - 2.8.2-2
+- CVE-2016-3111: Protect the RSA keys during and after install (#1325693).
+- Remove a redundant install statement.
+
 * Wed Apr 6 2016 Randy Barlow <randy@electronsweatshop.com> - 2.8.2-1
 - Update to Pulp 2.8.2 for CVE-2016-3095.
 
