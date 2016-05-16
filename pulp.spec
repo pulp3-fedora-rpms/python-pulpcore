@@ -9,11 +9,11 @@
 
 Name: pulp
 Version: 2.8.2
-Release: 2%{?dist}
+Release: 3%{?dist}
 BuildArch: noarch
 
 Summary: An application for managing software repositories
-License: GPLv2
+License: GPLv2+
 URL: https://github.com/pulp/pulp
 Source0: https://github.com/pulp/pulp/archive/pulp-%{version}-1.tar.gz
 
@@ -863,6 +863,9 @@ fi
 
 
 %changelog
+* Mon May 16 2016 Randy Barlow <rbarlow@redhat.com> - 2.8.2-3
+- Switch license to GPLv2+, as per the upstream COPYRIGHT file.
+
 * Fri May 13 2016 Randy Barlow <rbarlow@redhat.com> - 2.8.2-2
 - CVE-2016-3111: Protect the RSA keys during and after install (#1325693).
 - Remove a redundant install statement.
