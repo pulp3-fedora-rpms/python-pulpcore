@@ -8,8 +8,8 @@
 
 
 Name: pulp
-Version: 2.8.2
-Release: 3%{?dist}
+Version: 2.8.3
+Release: 1%{?dist}
 BuildArch: noarch
 
 Summary: An application for managing software repositories
@@ -59,6 +59,10 @@ cd -
 
 # Build docs.
 pushd docs
+# Pulp > 2.8.3 changed how the diagrams are build, but 2.8.3 requires us to mkdir a destination for
+# the images. This command will fail with >= 2.8.4, but that's OK and we can just drop the mkdir
+# because it will no longer be needed.
+mkdir dev-guide/images
 make %{?_smp_mflags} html
 make %{?_smp_mflags} man
 popd
@@ -863,7 +867,8 @@ fi
 
 
 %changelog
-* Mon May 16 2016 Randy Barlow <rbarlow@redhat.com> - 2.8.2-3
+* Mon May 16 2016 Randy Barlow <rbarlow@redhat.com> - 2.8.3-1
+- Update to 2.8.3, fixing multiple CVEs and other bugfixes (#1337309).
 - Switch license to GPLv2+, as per the upstream COPYRIGHT file.
 
 * Fri May 13 2016 Randy Barlow <rbarlow@redhat.com> - 2.8.2-2
