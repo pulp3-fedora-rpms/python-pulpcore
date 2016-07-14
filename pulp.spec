@@ -8,7 +8,7 @@
 
 
 Name: pulp
-Version: 2.8.3
+Version: 2.9.0
 Release: 1%{?dist}
 BuildArch: noarch
 
@@ -584,7 +584,9 @@ Pulp provides replication, access, and accounting for software repositories.
 %{_bindir}/pulp-gen-ca-certificate
 %dir %{_usr}/lib/%{name}/plugins
 %dir %{_usr}/lib/%{name}/plugins/types
-%{_unitdir}/*
+%{_unitdir}/pulp_celerybeat.service
+%{_unitdir}/pulp_resource_manager.service
+%{_unitdir}/pulp_workers.service
 %{_usr}/lib/tmpfiles.d/*
 %{python2_sitelib}/%{name}/server/
 %{python2_sitelib}/%{name}/plugins/
@@ -847,7 +849,7 @@ The streamer component of the Pulp Lazy Sync feature.
 %{_bindir}/pulp_streamer
 %{python2_sitelib}/%{name}/streamer/
 %{python2_sitelib}/pulp_streamer*.egg-info
-%{_usr}/lib/systemd/system/pulp_streamer.service
+%{_unitdir}/pulp_streamer.service
 %{_datadir}/pulp/wsgi/streamer_auth.wsgi
 %{_datadir}/pulp/wsgi/streamer.tac
 
@@ -867,6 +869,10 @@ fi
 
 
 %changelog
+* Thu Jul 14 2016 Jeremy Cline <jcline@redhat.com> - 2.9.0-1
+- Update to 2.9.0
+- Only python-pulp-streamer provides the pulp_streamer.service (#1338359)
+
 * Mon May 16 2016 Randy Barlow <rbarlow@redhat.com> - 2.8.3-1
 - Update to 2.8.3, fixing multiple CVEs and other bugfixes (#1337309).
 - Switch license to GPLv2+, as per the upstream COPYRIGHT file.
