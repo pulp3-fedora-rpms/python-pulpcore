@@ -9,7 +9,7 @@
 
 Name: pulp
 Version: 2.9.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 BuildArch: noarch
 
 Summary: An application for managing software repositories
@@ -869,6 +869,9 @@ fi
 
 
 %changelog
+* Tue Jul 19 2016 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.9.0-2
+- https://fedoraproject.org/wiki/Changes/Automatic_Provides_for_Python_RPM_Packages
+
 * Thu Jul 14 2016 Jeremy Cline <jcline@redhat.com> - 2.9.0-1
 - Update to 2.9.0
 - Only python-pulp-streamer provides the pulp_streamer.service (#1338359)
