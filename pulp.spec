@@ -1,15 +1,10 @@
-#SELinux
-%global selinux_variants mls strict targeted
-%global selinux_policyver %(sed -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp 2> /dev/null)
-%global moduletype apps
-
 # Required gofer version
 %global gofer_version 2.5
 
 
 Name: pulp
-Version: 2.9.0
-Release: 2%{?dist}
+Version: 2.10.0
+Release: 1%{?dist}
 BuildArch: noarch
 
 Summary: An application for managing software repositories
@@ -18,6 +13,7 @@ URL: https://github.com/pulp/pulp
 Source0: https://github.com/pulp/pulp/archive/pulp-%{version}-1.tar.gz
 
 BuildRequires: checkpolicy
+BuildRequires: graphviz
 BuildRequires: hardlink
 BuildRequires: plantuml
 BuildRequires: python2-devel
@@ -530,6 +526,7 @@ Requires: acl
 Requires: crontabs
 Requires: genisoimage
 Requires: glibc-common
+Requires: kobo
 Requires: httpd
 Requires: httpd-filesystem
 Requires: m2crypto
@@ -869,6 +866,11 @@ fi
 
 
 %changelog
+* Wed Sep 21 2016 Patrick Creech <pcreech@redhat.com> - 2.10.0-1
+- Bumped to 2.10.0
+- Added kobo and graphiz dependencies
+- Removed unused selinux variables in spec file (#1365466)
+
 * Tue Jul 19 2016 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.9.0-2
 - https://fedoraproject.org/wiki/Changes/Automatic_Provides_for_Python_RPM_Packages
 
