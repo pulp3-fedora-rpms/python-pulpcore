@@ -3,7 +3,7 @@
 
 
 Name: pulp
-Version: 2.10.0
+Version: 2.10.3
 Release: 1%{?dist}
 BuildArch: noarch
 
@@ -479,8 +479,8 @@ SELinux policy for Pulp's components
 %pre selinux
 # Record old version so we can limit which restorecon statement are executed later
 test -e %{_localstatedir}/lib/rpm-state/%{name} || mkdir -p %{_localstatedir}/lib/rpm-state/%{name}
-oldversion=$(semodule -l | grep pulp-server)
-echo ${oldversion:12} > %{_localstatedir}/lib/rpm-state/%{name}/old-version
+oldversion=$(rpm -qa pulp-selinux)
+echo ${oldversion:13} > %{_localstatedir}/lib/rpm-state/%{name}/old-version
 
 exit 0
 
@@ -529,6 +529,7 @@ Requires: glibc-common
 Requires: kobo
 Requires: httpd
 Requires: httpd-filesystem
+Requires: libselinux-python
 Requires: m2crypto
 Requires: mod_ssl
 Requires: mod_wsgi >= 3.4-1.pulp
@@ -866,6 +867,11 @@ fi
 
 
 %changelog
+* Wed Dec 14 2016 Bihan Zhang <bizhang@redhat.com> - 2.10.3-1
+- Bumped to 2.10.3
+- Added libselinux-python dependency
+- Use rpm -qa instead of semodule to determine version of the previous SELinux policy
+
 * Wed Sep 21 2016 Patrick Creech <pcreech@redhat.com> - 2.10.0-1
 - Bumped to 2.10.0
 - Added kobo and graphiz dependencies
