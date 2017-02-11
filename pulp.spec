@@ -4,7 +4,7 @@
 
 Name: pulp
 Version: 2.10.3
-Release: 1%{?dist}
+Release: 2%{?dist}
 BuildArch: noarch
 
 Summary: An application for managing software repositories
@@ -867,6 +867,9 @@ fi
 
 
 %changelog
+* Sat Feb 11 2017 Fedora Release Engineering <releng@fedoraproject.org> - 2.10.3-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
+
 * Wed Dec 14 2016 Bihan Zhang <bizhang@redhat.com> - 2.10.3-1
 - Bumped to 2.10.3
 - Added libselinux-python dependency
