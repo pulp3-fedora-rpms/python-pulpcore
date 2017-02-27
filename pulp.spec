@@ -3,14 +3,15 @@
 
 
 Name: pulp
-Version: 2.10.3
-Release: 2%{?dist}
+Version: 2.12.1
+Release: 1%{?dist}
 BuildArch: noarch
 
 Summary: An application for managing software repositories
 License: GPLv2+
 URL: https://github.com/pulp/pulp
 Source0: https://github.com/pulp/pulp/archive/pulp-%{version}-1.tar.gz
+Patch0: pulp-2.12.1-celery4.patch
 
 BuildRequires: checkpolicy
 BuildRequires: graphviz
@@ -29,8 +30,8 @@ Pulp provides replication, access, and accounting for software repositories.
 
 
 %prep
-%autosetup -n %{name}-%{name}-%{version}-1
-
+%setup -n %{name}-%{name}-%{version}-1
+%patch0 -p1
 
 %build
 # Build Python packages.
@@ -539,7 +540,6 @@ Requires: openssl
 Requires: pulp-selinux
 Requires: python-blinker
 Requires: python-celery >= 3.1.11
-Requires: python-celery < 3.2.0
 Requires: python-django >= 1.4.0
 Requires: python-gofer >= %{gofer_version}
 Requires: python-httplib2
@@ -714,7 +714,7 @@ The Pulp REST API bindings for python.
 Summary: Pulp client extensions framework
 Requires: m2crypto
 Requires: python-isodate >= 0.5.0-1
-Requires: python-okaara >= 1.0.32
+Requires: python-okaara >= 1.0.32,python-okaara < 1.0.36
 Requires: python2-%{name}-common = %{version}
 Requires: python2-setuptools
 %{?python_provide:%python_provide python2-client-lib}
@@ -867,6 +867,11 @@ fi
 
 
 %changelog
+* Mon Feb 27 2017 Bihan Zhang <bizhang@redhat.com> - 2.12.1-1
+- Bumped to 2.12.1
+- Add Patch for Pulp Celery4 Support
+- Update okaara version
+
 * Sat Feb 11 2017 Fedora Release Engineering <releng@fedoraproject.org> - 2.10.3-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
 

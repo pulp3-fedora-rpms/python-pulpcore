@@ -1,0 +1,203 @@
+diff --git a/server/pulp/server/async/app.py b/server/pulp/server/async/app.py
+index 7a7a98b..ea14e75 100644
+--- a/server/pulp/server/async/app.py
++++ b/server/pulp/server/async/app.py
+@@ -85,7 +85,7 @@ def initialize_worker(sender, instance, **kwargs):
+ 
+ 
+ @worker_shutdown.connect
+-def shutdown_worker(signal, sender):
++def shutdown_worker(signal, sender, **kwargs):
+     """
+     Called when a worker is shutdown.
+ 
+@@ -96,6 +96,8 @@ def shutdown_worker(signal, sender):
+     :type  signal:   int
+     :param instance: The hostname of the worker
+     :type  instance: celery.apps.worker.Worker
++    :param kwargs:   Other params (unused)
++    :type  kwargs:   dict
+     """
+     tasks._delete_worker(sender.hostname, normal_shutdown=True)
+ 
+diff --git a/server/pulp/server/async/celery_instance.py b/server/pulp/server/async/celery_instance.py
+index 2a80fd3..dd187a6 100644
+--- a/server/pulp/server/async/celery_instance.py
++++ b/server/pulp/server/async/celery_instance.py
+@@ -9,7 +9,7 @@
+ import os
+ import ssl
+ 
+-from celery import Celery
++from celery import Celery, __version__ as celery_version
+ 
+ from pulp.server.config import config
+ from pulp.server.constants import PULP_DJANGO_SETTINGS_MODULE
+@@ -19,8 +19,7 @@
+ broker_url = config.get('tasks', 'broker_url')
+ celery = Celery('tasks', broker=broker_url)
+ 
+-
+-DEDICATED_QUEUE_EXCHANGE = 'C.dq'
++DEDICATED_QUEUE_EXCHANGE = 'C.dq2' if celery_version.startswith('4') else 'C.dq'
+ RESOURCE_MANAGER_QUEUE = 'resource_manager'
+ CELERYBEAT_SCHEDULE = {
+     'reap_expired_documents': {
+diff --git a/server/pulp/server/async/tasks.py b/server/pulp/server/async/tasks.py
+index db9e546..fa4e421 100644
+--- a/server/pulp/server/async/tasks.py
++++ b/server/pulp/server/async/tasks.py
+@@ -12,7 +12,7 @@
+ from bson.json_util import dumps as bson_dumps
+ from bson.json_util import loads as bson_loads
+ from bson import ObjectId
+-from celery import task, Task as CeleryTask, current_task
++from celery import task, Task as CeleryTask, current_task, __version__ as celery_version
+ from celery.app import control, defaults
+ from celery.result import AsyncResult
+ from mongoengine.queryset import DoesNotExist
+@@ -451,8 +451,12 @@ def apply_async(self, *args, **kwargs):
+         :return:            An AsyncResult instance as returned by Celery's apply_async
+         :rtype:             celery.result.AsyncResult
+         """
+-        routing_key = kwargs.get('routing_key',
+-                                 defaults.NAMESPACES['CELERY']['DEFAULT_ROUTING_KEY'].default)
++        if celery_version.startswith('4'):
++            routing_key = kwargs.get('routing_key',
++                                     defaults.NAMESPACES['task']['default_routing_key'].default)
++        else:
++            routing_key = kwargs.get('routing_key',
++                                     defaults.NAMESPACES['CELERY']['DEFAULT_ROUTING_KEY'].default)
+         tag_list = kwargs.pop('tags', [])
+         group_id = kwargs.pop('group_id', None)
+         async_result = super(Task, self).apply_async(*args, **kwargs)
+diff --git a/server/pulp/server/db/model/dispatch.py b/server/pulp/server/db/model/dispatch.py
+index 9c82c70..eedc2e2 100644
+--- a/server/pulp/server/db/model/dispatch.py
++++ b/server/pulp/server/db/model/dispatch.py
+@@ -8,7 +8,6 @@
+ from bson import ObjectId
+ from celery import beat
+ from celery.schedules import schedule as CelerySchedule
+-from celery.utils.timeutils import timedelta_seconds
+ 
+ from pulp.common import dateutils
+ from pulp.server.async.celery_instance import celery as app
+@@ -19,6 +18,17 @@
+ _logger = logging.getLogger(__name__)
+ 
+ 
++def timedelta_total_seconds(timedelta):
++    """
++    Python 2.6 (RHEL6) does not provide the total_seconds() method on timedelta objects.
++    Adding an alternative here for compatability purposes, but this can be removed
++    once we transition to Python 3.
++    """
++    return (
++        timedelta.microseconds + 0.0 +
++        (timedelta.seconds + timedelta.days * 24 * 3600) * 10 ** 6) / 10 ** 6
++
++
+ class ScheduledCall(Model):
+     """
+     Serialized scheduled call request
+@@ -298,9 +308,9 @@ def _calculate_times(self):
+             if self.last_run_at is not None:
+                 last_run_dt = dateutils.to_utc_datetime(
+                     dateutils.parse_iso8601_datetime(str(self.last_run_at)))
+-                run_every_s = timedelta_seconds(interval.totimedelta(start=last_run_dt))
++                run_every_s = timedelta_total_seconds(interval.totimedelta(start=last_run_dt))
+             else:
+-                run_every_s = timedelta_seconds(interval.totimedelta(start=first_run_dt))
++                run_every_s = timedelta_total_seconds(interval.totimedelta(start=first_run_dt))
+ 
+             # This discovers how many runs should have occurred based on the schedule
+             expected_runs = 0
+@@ -316,11 +326,11 @@ def _calculate_times(self):
+                 current_run_s = calendar.timegm(current_run.utctimetuple())
+                 if current_run_s < now_s:
+                     expected_runs += 1
+-                    last_scheduled_run_s += timedelta_seconds(current_interval)
++                    last_scheduled_run_s += timedelta_total_seconds(current_interval)
+                 else:
+                     break
+         else:
+-            run_every_s = timedelta_seconds(interval)
++            run_every_s = timedelta_total_seconds(interval)
+             # don't want this to be negative
+             expected_runs = max(int(since_first_s / run_every_s), 0)
+             last_scheduled_run_s = first_run_s + expected_runs * run_every_s
+diff --git a/server/pulp/server/managers/repo/unit_association.py b/server/pulp/server/managers/repo/unit_association.py
+index ea25b06..6a0e85d 100644
+--- a/server/pulp/server/managers/repo/unit_association.py
++++ b/server/pulp/server/managers/repo/unit_association.py
+@@ -181,8 +181,8 @@ def _units_from_criteria(source_repo, criteria):
+             unit_fields=criteria['unit_fields'],
+             yield_content_unit=True)
+ 
+-    @classmethod
+-    def associate_from_repo(cls, source_repo_id, dest_repo_id, criteria,
++    @staticmethod
++    def associate_from_repo(source_repo_id, dest_repo_id, criteria,
+                             import_config_override=None):
+         """
+         Creates associations in a repository based on the contents of a source
+@@ -239,7 +239,7 @@ def associate_from_repo(cls, source_repo_id, dest_repo_id, criteria,
+         transfer_units = None
+         # if all source types have been converted to mongo - search via new style
+         if source_repo_unit_types.issubset(set(plugin_api.list_unit_models())):
+-            transfer_units = cls._units_from_criteria(source_repo, criteria)
++            transfer_units = RepoUnitAssociationManager._units_from_criteria(source_repo, criteria)
+         else:
+             # else, search via old style
+             associate_us = load_associated_units(source_repo_id, criteria)
+@@ -338,8 +338,8 @@ def unassociate_all_by_ids(self, repo_id, unit_type_id, unit_id_list,
+         return self.unassociate_by_criteria(repo_id, criteria,
+                                             notify_plugins=notify_plugins)
+ 
+-    @classmethod
+-    def unassociate_by_criteria(cls, repo_id, criteria, notify_plugins=True):
++    @staticmethod
++    def unassociate_by_criteria(repo_id, criteria, notify_plugins=True):
+         """
+         Unassociate units that are matched by the given criteria.
+ 
+@@ -362,7 +362,7 @@ def unassociate_by_criteria(cls, repo_id, criteria, notify_plugins=True):
+         # If all source types have been converted to mongo, search via new style.
+         repo_unit_types = set(repo.content_unit_counts.keys())
+         if repo_unit_types.issubset(set(plugin_api.list_unit_models())):
+-            transfer_units = list(cls._units_from_criteria(repo, criteria))
++            transfer_units = list(RepoUnitAssociationManager._units_from_criteria(repo, criteria))
+         else:
+             transfer_units = None
+             if unassociate_units is not None:
+@@ -380,10 +380,11 @@ def unassociate_by_criteria(cls, repo_id, criteria, notify_plugins=True):
+         collection = RepoContentUnit.get_collection()
+ 
+         for unit_type_id, unit_ids in unit_map.items():
+-            spec = {'repo_id': repo_id,
+-                    'unit_type_id': unit_type_id,
+-                    'unit_id': {'$in': unit_ids}
+-                    }
++            spec = {
++                'repo_id': repo_id,
++                'unit_type_id': unit_type_id,
++                'unit_id': {'$in': unit_ids}
++            }
+             collection.remove(spec)
+ 
+             unique_count = sum(
+diff --git a/server/setup.py b/server/setup.py
+index 3011471..4090f5c 100755
+--- a/server/setup.py
++++ b/server/setup.py
+@@ -32,7 +32,7 @@ setup(
+         ]
+     },
+     install_requires=[
+-        'blinker', 'celery >=3.1.0, <3.2.0', 'httplib2', 'iniparse', 'isodate>=0.5.0',
++        'blinker', 'celery >=3.1.0', 'httplib2', 'iniparse', 'isodate>=0.5.0',
+         'mongoengine>=0.10.0', 'oauth2>=1.5.211', 'pymongo>=3.0.0', 'setuptools',
+         DJANGO_REQUIRES, SEMVER_REQUIRES, M2CRYPTO_REQUIRES],
+ )
+
