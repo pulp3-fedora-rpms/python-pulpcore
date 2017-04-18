@@ -3,7 +3,7 @@
 
 
 Name: pulp
-Version: 2.12.1
+Version: 2.12.2
 Release: 1%{?dist}
 BuildArch: noarch
 
@@ -11,7 +11,6 @@ Summary: An application for managing software repositories
 License: GPLv2+
 URL: https://github.com/pulp/pulp
 Source0: https://github.com/pulp/pulp/archive/pulp-%{version}-1.tar.gz
-Patch0: pulp-2.12.1-celery4.patch
 
 BuildRequires: checkpolicy
 BuildRequires: graphviz
@@ -30,8 +29,7 @@ Pulp provides replication, access, and accounting for software repositories.
 
 
 %prep
-%setup -n %{name}-%{name}-%{version}-1
-%patch0 -p1
+%autosetup -n %{name}-%{name}-%{version}-1
 
 %build
 # Build Python packages.
@@ -714,7 +712,7 @@ The Pulp REST API bindings for python.
 Summary: Pulp client extensions framework
 Requires: m2crypto
 Requires: python-isodate >= 0.5.0-1
-Requires: python-okaara >= 1.0.32,python-okaara < 1.0.36
+Requires: python-okaara >= 1.0.32
 Requires: python2-%{name}-common = %{version}
 Requires: python2-setuptools
 %{?python_provide:%python_provide python2-client-lib}
@@ -867,6 +865,11 @@ fi
 
 
 %changelog
+* Tue Apr 18 2017 Ina Panova <ipanova@redhat.com> - 2.12.2-1
+- Bumped to 2.12.2
+- Remove Patch for Pulp Celery4 Support
+- Update okaara version
+
 * Mon Feb 27 2017 Bihan Zhang <bizhang@redhat.com> - 2.12.1-1
 - Bumped to 2.12.1
 - Add Patch for Pulp Celery4 Support
