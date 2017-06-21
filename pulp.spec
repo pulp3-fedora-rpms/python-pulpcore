@@ -3,7 +3,7 @@
 
 
 Name: pulp
-Version: 2.12.2
+Version: 2.13.2
 Release: 1%{?dist}
 BuildArch: noarch
 
@@ -15,6 +15,7 @@ Source0: https://github.com/pulp/pulp/archive/pulp-%{version}-1.tar.gz
 BuildRequires: checkpolicy
 BuildRequires: graphviz
 BuildRequires: hardlink
+BuildRequires: java-devel
 BuildRequires: plantuml
 BuildRequires: python2-devel
 BuildRequires: python2-setuptools
@@ -408,13 +409,9 @@ Pulp nodes common modules.
 %{python2_sitelib}/pulp_node_common*.egg-info
 
 %defattr(640,root,apache,-)
+%ghost %{_sysconfdir}/pki/pulp/nodes/node.crt
 # The nodes.conf file contains OAuth secrets, so we don't want it to be world readable
 %config(noreplace) %{_sysconfdir}/pulp/nodes.conf
-
-
-%post nodes-common
-# Generate the certificate used to access the local server.
-pulp-gen-nodes-certificate
 
 
 # ---- Nodes Consumer Extensions ---------------------------------------------------
@@ -537,7 +534,7 @@ Requires: nss-tools
 Requires: openssl
 Requires: pulp-selinux
 Requires: python-blinker
-Requires: python-celery >= 3.1.11
+Requires: python-celery >= 3.1.17
 Requires: python-django >= 1.4.0
 Requires: python-gofer >= %{gofer_version}
 Requires: python-httplib2
@@ -577,6 +574,8 @@ Pulp provides replication, access, and accounting for software repositories.
 %dir %{_sysconfdir}/%{name}/vhosts80
 %{_bindir}/pulp-manage-db
 %{_bindir}/pulp-qpid-ssl-cfg
+%{_bindir}/pulp-setup
+%{_bindir}/pulp-gen-key-pair
 %{_bindir}/pulp-gen-ca-certificate
 %dir %{_usr}/lib/%{name}/plugins
 %dir %{_usr}/lib/%{name}/plugins/types
@@ -623,31 +622,6 @@ fi
 
 
 %post server
-# RSA key pair
-KEY_DIR="%{_sysconfdir}/pki/%{name}"
-KEY_PATH="$KEY_DIR/rsa.key"
-KEY_PATH_PUB="$KEY_DIR/rsa_pub.key"
-if [ ! -f $KEY_PATH ]
-then
-  # Ensure the key generated is only readable by the owner.
-  OLD_UMASK=$(umask)
-  umask 077
-  openssl genrsa -out $KEY_PATH 2048 &> /dev/null
-  openssl rsa -in $KEY_PATH -pubout > $KEY_PATH_PUB 2> /dev/null
-  umask $OLD_UMASK
-fi
-chmod 640 $KEY_PATH
-chmod 644 $KEY_PATH_PUB
-chown root:apache $KEY_PATH
-chown root:apache $KEY_PATH_PUB
-ln -fs $KEY_PATH_PUB %{_var}/lib/%{name}/static
-
-# CA certificate
-if [ $1 -eq 1 ]; # not an upgrade
-then
-  pulp-gen-ca-certificate
-fi
-
 %systemd_post pulp_workers.service
 %systemd_post pulp_celerybeat.service
 %systemd_post pulp_resource_manager.service
@@ -865,6 +839,11 @@ fi
 
 
 %changelog
+* Wed Jun 21 2017 Patrick Creech <pcreech@redhat.com> - 2.13.2-1
+- Bumped to 2.13.2
+- Key and Certificate generation now happens outside of spec file
+- Added java-devel dep for plantuml doc generation
+
 * Tue Apr 18 2017 Ina Panova <ipanova@redhat.com> - 2.12.2-1
 - Bumped to 2.12.2
 - Remove Patch for Pulp Celery4 Support
