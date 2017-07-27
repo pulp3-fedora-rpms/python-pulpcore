@@ -4,7 +4,7 @@
 
 Name: pulp
 Version: 2.13.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 BuildArch: noarch
 
 Summary: An application for managing software repositories
@@ -839,6 +839,9 @@ fi
 
 
 %changelog
+* Thu Jul 27 2017 Fedora Release Engineering <releng@fedoraproject.org> - 2.13.2-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
+
 * Wed Jun 21 2017 Patrick Creech <pcreech@redhat.com> - 2.13.2-1
 - Bumped to 2.13.2
 - Key and Certificate generation now happens outside of spec file
