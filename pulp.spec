@@ -3,14 +3,14 @@
 
 
 Name: pulp
-Version: 2.14.0
-Release: 2%{?dist}
+Version: 2.15.2
+Release: 1%{?dist}
 BuildArch: noarch
 
 Summary: An application for managing software repositories
 License: GPLv2+
 URL: https://github.com/pulp/pulp
-Source0: https://github.com/pulp/pulp/archive/pulp-%{version}-1.tar.gz
+Source0: https://github.com/%{name}/%{name}/archive/%{version}/%{name}-%{version}.tar.gz
 
 BuildRequires: checkpolicy
 BuildRequires: graphviz
@@ -30,7 +30,7 @@ Pulp provides replication, access, and accounting for software repositories.
 
 
 %prep
-%autosetup -n %{name}-%{name}-%{version}-1
+%autosetup
 
 %build
 # Build Python packages.
@@ -43,7 +43,7 @@ done
 
 # Build SELinux policies.
 cd server/selinux/server
-distver=fedora%{fedora}
+distver=redhat
 sed -i "s/policy_module(pulp-server, [0-9]*.[0-9]*.[0-9]*)/policy_module(pulp-server, %{version})/"\
     pulp-server.te
 sed -i "s/policy_module(pulp-celery, [0-9]*.[0-9]*.[0-9]*)/policy_module(pulp-celery, %{version})/"\
@@ -259,7 +259,7 @@ Summary: The Pulp agent
 Requires: gofer >= %{gofer_version}
 Requires: m2crypto
 Requires: %{name}-consumer-client = %{version}
-Requires: python-gofer >= %{gofer_version}
+Requires: python2-gofer >= %{gofer_version}
 Requires: python2-%{name}-bindings = %{version}
 Requires: python2-%{name}-agent-lib = %{version}
 
@@ -534,15 +534,15 @@ Requires: nss-tools
 Requires: openssl
 Requires: pulp-selinux
 Requires: python-blinker
-Requires: python-celery >= 3.1.17
-Requires: python-django >= 1.4.0
-Requires: python-gofer >= %{gofer_version}
-Requires: python-httplib2
+Requires: python2-celery >= 3.1.17
+Requires: python2-django1.11
+Requires: python2-gofer >= %{gofer_version}
+Requires: python2-httplib2
 Requires: python-isodate >= 0.5.0-1
-Requires: python-ldap
-Requires: python-nectar >= 1.5.0
-Requires: python-qpid
-Requires: python-semantic_version >= 2.2.0
+Requires: python2-ldap
+Requires: python2-nectar >= 1.5.0
+Requires: python2-qpid
+Requires: python2-semantic_version >= 2.2.0
 Requires: python2-%{name}-common = %{version}
 Requires: python2-%{name}-repoauth = %{version}
 Requires: python2-mongoengine >= 0.10.0
@@ -686,7 +686,7 @@ The Pulp REST API bindings for python.
 Summary: Pulp client extensions framework
 Requires: m2crypto
 Requires: python-isodate >= 0.5.0-1
-Requires: python-okaara >= 1.0.32
+Requires: python2-okaara >= 1.0.32
 Requires: python2-%{name}-common = %{version}
 Requires: python2-setuptools
 %{?python_provide:%python_provide python2-client-lib}
@@ -712,7 +712,7 @@ A framework for loading Pulp client extensions.
 # ---- Common ------------------------------------------------------------------
 %package -n python2-pulp-common
 Summary: Pulp common python packages
-Requires: python-iniparse
+Requires: python2-iniparse
 Requires: python-isodate >= 0.5.0-1
 %{?python_provide:%python_provide python2-pulp-common}
 
@@ -800,7 +800,7 @@ Cert-based repository authentication for Pulp
 Summary: The pulp lazy streamer
 Requires: httpd
 Requires: pulp-server >= %{version}
-Requires: python-twisted
+Requires: python2-twisted
 Requires: python2-mongoengine
 Requires(preun): systemd
 Requires(postun): systemd
@@ -839,6 +839,9 @@ fi
 
 
 %changelog
+* Thu Mar 01 2018 Patrick Creech <pcreech@redhat.com> - 2.15.2-1
+- new version
+
 * Fri Feb 09 2018 Fedora Release Engineering <releng@fedoraproject.org> - 2.14.0-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_28_Mass_Rebuild
 
