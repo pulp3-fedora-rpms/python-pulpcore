@@ -4,7 +4,7 @@
 
 Name: pulp
 Version: 2.15.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 BuildArch: noarch
 
 Summary: An application for managing software repositories
@@ -839,6 +839,9 @@ fi
 
 
 %changelog
+* Fri Jul 13 2018 Fedora Release Engineering <releng@fedoraproject.org> - 2.15.2-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
+
 * Thu Mar 01 2018 Patrick Creech <pcreech@redhat.com> - 2.15.2-1
 - new version
 
