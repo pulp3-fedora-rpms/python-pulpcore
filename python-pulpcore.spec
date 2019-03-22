@@ -23,7 +23,9 @@ BuildRequires:  python3dist(drf-yasg)
 BuildRequires:  python3dist(dynaconf) >= 1.0.4
 BuildRequires:  python3dist(gunicorn)
 BuildRequires:  python3dist(mysqlclient)
-BuildRequires:  python3dist(psycopg2-binary)
+# Fedora builds psycopg2 into the binary,
+# so we manually replace psycopg2-binary with psycopg2.
+BuildRequires:  python3dist(psycopg2)
 BuildRequires:  python3dist(pyyaml)
 BuildRequires:  python3dist(redis) < 3.2.0
 BuildRequires:  python3dist(rq) >= 0.12.0
