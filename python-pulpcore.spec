@@ -2,7 +2,7 @@
 %global pypi_name pulpcore
 
 Name:           python-%{pypi_name}
-Version:        3.0.0b23
+Version:        3.0.0rc1
 Release:        1%{?dist}
 Summary:        Pulp Django Application and Related Modules
 
@@ -28,7 +28,8 @@ BuildRequires:  python3dist(mysqlclient)
 BuildRequires:  python3dist(psycopg2)
 BuildRequires:  python3dist(pyyaml)
 BuildRequires:  python3dist(redis) < 3.2.0
-BuildRequires:  python3dist(rq) >= 0.12.0
+BuildRequires:  python3dist(rq) < 1.0
+BuildRequires:  python3dist(rq) >= 0.12
 BuildRequires:  python3dist(setuptools)
 BuildRequires:  python3dist(whitenoise)
 
@@ -56,7 +57,8 @@ Requires:       python3dist(mysqlclient)
 Requires:       python3dist(psycopg2)
 Requires:       python3dist(pyyaml)
 Requires:       python3dist(redis) < 3.2.0
-Requires:       python3dist(rq) >= 0.12.0
+Requires:       python3dist(rq) < 1.0
+Requires:       python3dist(rq) >= 0.12
 Requires:       python3dist(setuptools)
 Requires:       python3dist(whitenoise)
 %description -n python3-%{pypi_name}
@@ -88,6 +90,9 @@ rm -rf %{pypi_name}.egg-info
 %{python3_sitelib}/%{pypi_name}-%{version}-py?.?.egg-info
 
 %changelog
+* Fri Mar 29 2019 Mike DePaulo <mikedep333@redhat.com> - 3.0.0rc1-1
+- Update to 3.0.0rc1
+
 * Thu Mar 21 2019 Mike DePaulo <mikedep333@gmail.com> - 3.0.0b23-1
 - Update to 3.0.0b23
 - Fix build by replacing psycopg2-binary with psycopg2
